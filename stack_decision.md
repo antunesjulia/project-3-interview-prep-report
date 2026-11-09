@@ -1,10 +1,10 @@
 # Stack Decision
 
-**Industry / use case:** Career services: personalized interview preparation for job seekers
+**Industry / use case:** HR/Career services - personalized interview preparation for job seekers
 
 **Primary stack:** n8n
 
-**Team:** Roodabeh Seif and Julia
+**Team:** Julia Antunes and Roodabeh Seif  
 
 ## Why n8n fits this problem
 
