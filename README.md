@@ -12,7 +12,7 @@ Provide:
 
 - The company name
 - Either a link to the job advertisement or the job description text
-- One or more sources for your background: a GitHub profile, LinkedIn profile, or CV
+- One or more sources for your background: a GitHub profile or CV file
 
 The MVP uses these details to create a concise report tailored to the role and your experience.
 
@@ -32,7 +32,7 @@ Each report is designed to fit on one page and covers:
 
 1. Enter the company name.
 2. Add the job advertisement link or paste the job description.
-3. Share your GitHub or LinkedIn profile, or provide your CV.
+3. Share your GitHub or provide your CV file.
 4. Review your personalized interview preparation report before the interview.
 
 ## Intended outcome
