@@ -69,3 +69,16 @@ flowchart TD
 ## Intended outcome
 
 Help job seekers focus their preparation on the company, the role, and the strongest relevant examples from their own experience.
+
+## Success Metrics
+
+| Metric | How to measure | Example target |
+|---|---|---|
+| Required-section completeness | Percentage of reports containing every required section | 100% |
+| Question relevance | Check that each question relates to the role, company, or candidate | At least 4 of 5 questions |
+| Source support | Check that each company claim is supported by a cited source link | 100% of claims |
+| One-page fit | Render reports with a consistent template and count pages | 100% fit on one page |
+| News item formatting | When news is included, check that there are 2–3 items and each has a date and source link | 2–3 items, each with a date and link |
+| Source link validity | Automatically check whether cited links resolve | At least 95% resolve successfully |
+| Experience fit | Check candidate experience and project claims against the supplied profile or CV | 100% supported; no unsupported claims |
+| Autonomous completion | Count runs that finish without human input after a valid submission | 5 of 5 test runs |
