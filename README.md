@@ -35,6 +35,22 @@ Each report is designed to fit on one page and covers:
 3. Share your GitHub or LinkedIn profile, or provide your CV.
 4. Review your personalized interview preparation report before the interview.
 
+## Setup
+
+(to be edited)
+
+## Architecture
+
+(to be edited)
+
+## Tech Stack and Why
+
+(to be edited)
+
+## How to Run
+
+(to be edited)
+
 ## Intended outcome
 
 Help job seekers focus their preparation on the company, the role, and the strongest relevant examples from their own experience.
