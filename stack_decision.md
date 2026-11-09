@@ -42,4 +42,4 @@ These are proposed for Day 1 and must be confirmed by testing the API keys.
 | Retrieval | Pinecone | Grounding in the CV and interview-preparation guidance |
 | LLM | OpenAI or Anthropic | Analysis and report writing |
 
-The candidate provides their CV directly. The MVP does not scrape LinkedIn or any private personal data.
+The candidate provides their CV / Github link directly.
