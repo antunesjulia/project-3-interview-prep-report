@@ -34,7 +34,22 @@ Each report is designed to fit on one page and covers:
 2. Add the job advertisement link or paste the job description.
 3. Share your GitHub or provide your CV file.
 4. Review your personalized interview preparation report before the interview.
+## Workflow
 
+```mermaid
+flowchart TD
+    A["1. Form trigger<br/>Company, job posting, candidate sources"] --> B{"2. Validate inputs"}
+    B -- Missing input --> X["Stop and ask for what is missing"]
+    B -- Valid --> C{"3. Get job posting and extract requirements<br/>Tavily + LLM"}
+    C -- Unreadable --> X
+    C -- Readable --> D["4. Research company<br/>Tavily"]
+    D --> E["5. Find recent news<br/>GNews"]
+    E --> F["6. Collect candidate evidence<br/>CV text + GitHub API"]
+    F --> G["7. Retrieve interview guidance<br/>Pinecone"]
+    G --> H["8. Match, find gaps, write questions<br/>LLM"]
+    H --> I["9. Assemble one-page report"]
+    I --> J["10. Check quality and deliver"]
+```
 ## Setup
 
 (to be edited)
