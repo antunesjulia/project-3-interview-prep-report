@@ -41,11 +41,44 @@ Each report is designed to fit on one page and covers:
 
 ## Architecture
 
-(to be edited)
+User input
+  ↓
+n8n form or webhook
+  ↓
+Input validation
+  ↓
+Job-posting extraction
+  ↓
+Candidate-background collection
+  ├─ CV
+  ├─ GitHub
+  └─ LinkedIn
+  ↓
+Company and news research
+  ↓
+Document cleaning and chunking
+  ↓
+Pinecone retrieval
+  ↓
+OpenAI report generation
+  ↓
+Report validation and formatting
+  ↓
+Email, webhook response, or downloadable report
 
 ## Tech Stack and Why
 
-(to be edited)
+| Technology | Why it is used |
+|---|---|
+| n8n | Coordinates input handling, API calls, transformation, and report delivery |
+| OpenAI | Extracts requirements, compares experience with the role, and produces the report |
+| Tavily | Searches for company and role-related web information |
+| GNews or NewsAPI | Retrieves recent company news |
+| GitHub API | Collects public repositories, activity, and project evidence |
+| Pinecone | Stores embeddings and retrieves relevant candidate or job information |
+| CV parser or document extraction tool | Converts uploaded CVs into searchable text |
+| Webhook/form frontend | Collects company, job, and candidate inputs |
+| Email, PDF, or document output | Delivers the completed preparation report |
 
 ## How to Run
 
