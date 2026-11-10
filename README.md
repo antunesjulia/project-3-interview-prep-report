@@ -47,35 +47,40 @@ Receive request
 
 ## Setup
 
-(to be edited)
+1. Open an n8n instance.
+2. Import n8n-workflow json file (to be added)
+3. Create or assign an HTTP Header Auth credential for Tavily.
+4. Create or assign an OpenAI credential for the OpenAI API.
+5. Reassign credentials after importing if n8n does not preserve them.
+6. Keep API keys in n8n credentials or environment variables, never in the workflow JSON.
+
 
 ## Architecture
 
 ```mermaid
 flowchart TD
     A[Client or Form] --> B[Webhook<br/>POST /webhook/generate-interview-report]
-
     B --> C[Validate Input]
-
-    C --> D{Has CV?}
-    D -->|Yes| E[Extract CV Text<br/>PDF]
-    D -->|No| F{Has GitHub?}
+    C --> D{Needs Job Fetch?}
+    D -->|Yes| E[Fetch Job Advertisement]
+    D -->|No| F[Prepare Job Input]
     E --> F
-
-    F -->|Yes| G[GitHub Repositories<br/>GitHub REST API]
-    F -->|No| H[Build Candidate Evidence]
-    G --> H
-
-    H --> I[Company Research and News<br/>Tavily Search API]
-
-    I --> J[Generate Report<br/>OpenAI gpt-4o-mini]
-
-    J --> K[Validate Report<br/>JSON, URLs, evidence, sections]
-
-    K --> L[Respond to Webhook<br/>Validated JSON report]
+    F --> G{Has CV?}
+    G -->|Yes| H[Extract CV Text<br/>PDF]
+    G -->|No| I{Has GitHub?}
+    H --> I
+    I -->|Yes| J[GitHub Repositories<br/>GitHub REST API]
+    I -->|No| K[Build Candidate Evidence]
+    J --> K
+    K --> L[Company Research and News<br/>Tavily]
+    L --> M[Generate Report<br/>OpenAI gpt-4o-mini]
+    M --> N[Validate Report<br/>JSON, URLs, evidence, sections]
+    N --> O[Respond to Webhook<br/>Validated JSON report]
 ```
 
-    The MVP is implemented as an n8n workflow exposed through a POST webhook. The workflow validates the company, job, and candidate inputs; optionally extracts text from a PDF CV; optionally retrieves public GitHub repositories; researches the company and recent role-related news through Tavily; and sends the collected information to OpenAI to generate a structured interview preparation report. A final validation step checks the report structure, source URLs, candidate evidence, and required question count before returning the report as JSON.
+The workflow is implemented in n8n. It validates the request, accepts either pasted job-description text or a public job-advertisement URL, collects candidate evidence from a PDF CV, candidate context, or GitHub, researches the company through Tavily, generates the report with OpenAI, validates the result, and returns JSON.
+
+When a job URL is provided, `Prepare Job Input` first looks for structured `JobPosting` JSON-LD and then falls back to the page's `og:description` metadata. If neither contains enough text, the workflow asks the user to paste the job description instead.
 
 ## Tech Stack and Why
 
@@ -91,7 +96,73 @@ flowchart TD
 
 ## How to Run
 
-(to be edited)
+1. Start or open n8n.
+2. Import n8n-workflow json file (to be added).
+3. Assign the Tavily and OpenAI credentials to their respective nodes.
+4. Activate the workflow, or use the n8n test webhook while developing.
+5. Send a `POST` request to:
+
+```text
+/webhook/generate-interview-report
+```
+
+The request must include `company_name` and either `job_description` or `job_url`. It must also include at least one candidate source: `candidate_context`, `github_profile`, or a PDF uploaded as the binary field `cv`.
+
+Example JSON request:
+
+```json
+{
+  "company_name": "Example Company",
+  "job_description": "We are looking for a backend developer with API and database experience.",
+  "candidate_context": "I have built REST APIs with Node.js and PostgreSQL.",
+  "github_profile": "your github profile name"
+}
+```
+
+The workflow returns the validated report as JSON. If both `job_description` and `job_url` are supplied, the pasted job description is used.
+
+## Testing Checklist
+
+- [ ] Import the workflow successfully.
+- [ ] Confirm the Tavily credential works.
+- [ ] Confirm the OpenAI credential works.
+- [ ] Test with pasted `job_description`.
+- [ ] Test with a publicly accessible `job_url`.
+- [ ] Test with a candidate context only.
+- [ ] Test with a public GitHub profile.
+- [ ] Test with a text-based PDF CV using the binary field `cv`.
+- [ ] Test a missing company name.
+- [ ] Test a request with neither `job_description` nor `job_url`.
+- [ ] Test an invalid GitHub URL.
+- [ ] Test a non-PDF CV.
+- [ ] Test an inaccessible or JavaScript-only job page.
+- [ ] Confirm the response contains all required report sections.
+- [ ] Confirm unsupported candidate claims are removed by `Validate Report`.
+
+## Limitations and Error Handling
+
+- Job URLs must be publicly accessible and readable without an interactive login.
+- JavaScript-rendered, bot-protected, or blocked job pages may fail. Paste the job description when URL extraction fails.
+- URL extraction relies on structured `JobPosting` data or `og:description` metadata.
+- Scanned PDFs may produce little or no extractable text because OCR is not included.
+- GitHub evidence is limited to public repositories.
+- The workflow does not currently use Pinecone, RAG, LinkedIn, persistent storage, email delivery, or PDF report generation (to be explored in future versions).
+- Invalid input stops the workflow with a validation error.
+- Tavily or OpenAI credential and API errors must be reviewed in the n8n execution log.
+- Reports may contain zero to three news items when relevant news cannot be verified.
+- The final validation step removes claims whose URLs or candidate evidence cannot be traced to the supplied data.
+
+## Security and Privacy
+
+- Store Tavily and OpenAI keys in n8n credentials or environment variables.
+- Never place API keys in the workflow JSON, README, screenshots, or Git commits.
+- Keep `.env` excluded from version control.
+- Rotate any key that has been exposed.
+- Treat CVs, candidate context, and profile data as personal information.
+- Use synthetic test data before processing real candidate information.
+- Review n8n execution-history retention and delete sensitive executions when appropriate.
+- Define how submitted CVs and candidate data are retained and deleted before inviting real users.
+- Avoid enabling public access to the webhook without appropriate access controls and rate limits.
 
 ## Intended outcome
 
