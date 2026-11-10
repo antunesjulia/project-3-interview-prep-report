@@ -12,7 +12,7 @@ Provide:
 
 - The company name
 - Either a link to the job advertisement or the job description text
-- One or more sources for your background: a GitHub profile or CV file
+- One or more sources for your background: a GitHub profile, CV file, or the candidate context or background text
 
 The MVP uses these details to create a concise report tailored to the role and your experience.
 
@@ -28,39 +28,66 @@ Each report is designed to fit on one page and covers:
 6. **Skill gaps to address** — requirements that appear less represented in your background, with suggestions for how to prepare.
 7. **Likely interview questions** — five questions tailored to the role and your experience.
 
-## Typical workflow
+## Typical Workflow
 
-1. Enter the company name.
-2. Add the job advertisement link or paste the job description.
-3. Share your GitHub or provide your CV file.
-4. Review your personalized interview preparation report before the interview.
+Enter company and job details
+→ Provide candidate evidence
+→ Submit the request
+→ Receive the interview preparation report
+
 ## Workflow
 
-```mermaid
-flowchart TD
-    A["1. Form trigger<br/>Company, job posting, candidate sources"] --> B{"2. Validate inputs"}
-    B -- Missing input --> X["Stop and ask for what is missing"]
-    B -- Valid --> C{"3. Get job posting and extract requirements<br/>Tavily + LLM"}
-    C -- Unreadable --> X
-    C -- Readable --> D["4. Research company<br/>Tavily"]
-    D --> E["5. Find recent news<br/>GNews"]
-    E --> F["6. Collect candidate evidence<br/>CV text + GitHub API"]
-    F --> G["7. Retrieve interview guidance<br/>Pinecone"]
-    G --> H["8. Match, find gaps, write questions<br/>LLM"]
-    H --> I["9. Assemble one-page report"]
-    I --> J["10. Check quality and deliver"]
-```
+Receive request
+→ Validate inputs
+→ Collect candidate evidence
+→ Research company and news
+→ Generate report
+→ Validate report
+→ Return result
+
 ## Setup
 
 (to be edited)
 
 ## Architecture
 
-(to be edited)
+```mermaid
+flowchart TD
+    A[Client or Form] --> B[Webhook<br/>POST /webhook/generate-interview-report]
+
+    B --> C[Validate Input]
+
+    C --> D{Has CV?}
+    D -->|Yes| E[Extract CV Text<br/>PDF]
+    D -->|No| F{Has GitHub?}
+    E --> F
+
+    F -->|Yes| G[GitHub Repositories<br/>GitHub REST API]
+    F -->|No| H[Build Candidate Evidence]
+    G --> H
+
+    H --> I[Company Research and News<br/>Tavily Search API]
+
+    I --> J[Generate Report<br/>OpenAI gpt-4o-mini]
+
+    J --> K[Validate Report<br/>JSON, URLs, evidence, sections]
+
+    K --> L[Respond to Webhook<br/>Validated JSON report]
+```
+
+    The MVP is implemented as an n8n workflow exposed through a POST webhook. The workflow validates the company, job, and candidate inputs; optionally extracts text from a PDF CV; optionally retrieves public GitHub repositories; researches the company and recent role-related news through Tavily; and sends the collected information to OpenAI to generate a structured interview preparation report. A final validation step checks the report structure, source URLs, candidate evidence, and required question count before returning the report as JSON.
 
 ## Tech Stack and Why
 
-(to be edited)
+| Technology | Purpose |
+|---|---|
+| n8n | Orchestrates the workflow and exposes the webhook |
+| n8n Code nodes | Validate inputs, combine evidence, and validate the generated report |
+| OpenAI `gpt-4o-mini` | Generates the structured interview preparation report |
+| Tavily Search API | Retrieves company information and recent relevant news |
+| GitHub REST API | Retrieves public repository information |
+| n8n Extract From File | Extracts text from PDF CVs |
+| Webhook response | Returns the final report as JSON |
 
 ## How to Run
 
