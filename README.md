@@ -1,170 +1,218 @@
 # Project 3 MVP - Interview Prep Report
 
-Interview Prep Report helps job seekers prepare for an upcoming interview by turning a job posting and their professional background into a personalized, one-page preparation brief.
+Interview Prep Report helps job seekers prepare for an upcoming interview by turning a job posting and their professional background into a personalized preparation report.
 
 ## The problem
 
-Preparing for an interview means researching the company, understanding what the role requires, and figuring out which parts of your experience to emphasize. When an interview is only a week away, pulling all of that together can be time-consuming.
+Preparing for an interview means researching the company, understanding what the role requires, and figuring out which parts of your experience to emphasize. Pulling that information together can be time-consuming.
 
 ## MVP
 
-Provide:
+Submit the n8n form with:
 
 - The company name
-- Either a link to the job advertisement or the job description text
-- One or more sources for your background: a GitHub profile, CV file, or the candidate context or background text
+- The job description pasted into the job-posting field, or a public job-posting URL entered in that same field
+- At least one candidate source: a PDF CV or a GitHub username/profile URL
 
-The MVP uses these details to create a concise report tailored to the role and your experience.
+The workflow uses these details to create a role-specific report.
 
 ## What the report includes
 
-Each report is designed to fit on one page and covers:
+The form displays a styled HTML report with:
 
-1. **Company background** — a brief introduction to the company.
-2. **Recent relevant news** — the two or three most recent news items related to the role, when available.
-3. **Role requirements** — the main skills, experience, and responsibilities described in the job posting.
-4. **Your match** — how your experience and projects relate to the role, based on the profile or CV you provided.
-5. **Projects to highlight** — projects that are especially useful to discuss in the interview.
-6. **Skill gaps to address** — requirements that appear less represented in your background, with suggestions for how to prepare.
-7. **Likely interview questions** — five questions tailored to the role and your experience.
+1. **Company background** - a brief introduction to the company.
+2. **Recent relevant news** - zero to three news items, when available.
+3. **Role requirements** - intended to contain up to five requirements and their priority.
+4. **Your match** - intended to contain up to three candidate-experience matches.
+5. **Projects to highlight** - intended to contain up to two relevant projects.
+6. **Skill gaps to address** - intended to contain up to three gaps with preparation steps.
+7. **Likely interview questions** - exactly five questions.
+
+The report-generation prompt targets about 500 words, but the workflow does not enforce a word count or guarantee that the rendered report fits on one page. Exactly five interview questions and no more than three news items are enforced during validation. The other section limits above are requested by the prompt but are not independently enforced by the workflow. News items are linked in the HTML report. Company source URLs and candidate evidence references are validated during processing but are not currently displayed as links in the report.
 
 ## Typical Workflow
 
-Enter company and job details
-→ Provide candidate evidence
-→ Submit the request
-→ Receive the interview preparation report
+Open the n8n form
+-> Enter the company and job posting
+-> Upload a PDF CV, provide a GitHub profile, or both
+-> Submit the form
+-> Review the report displayed by the form
 
 ## Workflow
 
-Receive request
-→ Validate inputs
-→ Collect candidate evidence
-→ Research company and news
-→ Generate report
-→ Validate report
-→ Return result
+Form submission
+-> Validate inputs
+-> Fetch and parse the job posting when a URL was entered
+-> Extract CV text and/or collect public GitHub repository evidence
+-> Research the company with Tavily and GNews
+-> Generate and validate the report
+-> Format the report as HTML cards and display it in the form
+
+Invalid input is displayed in the form. The invalid-input branch is also connected to a Notion node that attempts to create a validation-error page.
 
 ## Setup
 
-1. Open an n8n instance.
-2. Import n8n-workflow json file (to be added)
-3. Create or assign an HTTP Header Auth credential for Tavily.
-4. Create or assign an OpenAI credential for the OpenAI API.
-5. Reassign credentials after importing if n8n does not preserve them.
-6. Keep API keys in n8n credentials or environment variables, never in the workflow JSON.
+### Requirements
 
+- An n8n instance, either n8n Cloud or a self-hosted n8n installation.
+- Credentials for Tavily, GNews, and OpenAI.
+- An optional Notion credential and destination page if validation-error logging is enabled.
+- A browser for opening the n8n form.
+
+### Installation and configuration
+
+1. Start or open an n8n instance. If self-hosting, install n8n using the installation method supported by your deployment environment.
+2. Copy `.env.example` to `.env` only if your n8n deployment uses environment variables for configuration. Keep the values in `.env` local and private.
+3. Import [FINAL_n8n-mvp-workflow.json](./FINAL_n8n-mvp-workflow.json).
+4. Configure and assign credentials to the Tavily, GNews, and OpenAI nodes in n8n. The workflow uses n8n credential references; it does not read project-level `.env` values directly.
+5. Check the Notion node's credential and target page/database configuration if you want to keep validation-error logging enabled.
+6. Reassign credentials after importing if n8n does not preserve them.
+7. Activate the workflow before using its production form URL. The imported workflow is inactive by default.
+8. Never put real API keys in the workflow JSON, README, `.env.example`, screenshots, or Git commits.
+
+The workflow export contains n8n credential references, but not API key or token values. Its Notion node uses a page-ID placeholder for validation-error logging; replace it with a page you control before running that node.
+
+### Environment variables
+
+`.env.example` contains variable names only. The current workflow does not reference project-level environment variables directly; these names are provided for deployments that map secrets into n8n or use them when configuring credentials. Do not commit `.env` or real secret values.
+
+The workflow does not currently use NewsAPI, Pinecone, or an authenticated GitHub token. GitHub requests use public unauthenticated endpoints.
+
+## File Map
+
+| File or folder | Purpose |
+|---|---|
+| `FINAL_n8n-mvp-workflow.json` | Primary n8n MVP workflow to import and run. |
+| `README.md` | Project overview, setup, usage, architecture, testing, and limitations. |
+| `.env.example` | Safe template containing environment-variable names only. |
+| `.env` | Local environment configuration; ignored by Git and must never contain committed secrets. |
+| `report_template.md` | Reference for the intended interview-report structure and content. |
+| `stack_decision.md` | Records technology and architecture decisions. |
+| `gtm_future_sprints.md` | Future product, go-to-market, and development ideas. |
+| `visual_proof` | Folder containing Form-interface.png, Report-1.png, Report-2.png,final-n8n-workflow.png screenshots showing the form, generated reports, and workflow layout. |
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    A[Client or Form] --> B[Webhook<br/>POST /webhook/generate-interview-report]
-    B --> C[Validate Input]
-    C --> D{Needs Job Fetch?}
-    D -->|Yes| E[Fetch Job Advertisement]
-    D -->|No| F[Prepare Job Input]
-    E --> F
-    F --> G{Has CV?}
-    G -->|Yes| H[Extract CV Text<br/>PDF]
-    G -->|No| I{Has GitHub?}
-    H --> I
-    I -->|Yes| J[GitHub Repositories<br/>GitHub REST API]
-    I -->|No| K[Build Candidate Evidence]
+    A[n8n Form Trigger] --> B[Validate Input]
+    B --> C{Input Valid?}
+    C -->|No: invalid submission| D[Show Validation Error]
+    C -->|No: invalid submission| E[Create a page in Notion]
+    C -->|Yes| F{Needs Job Fetch?}
+    F -->|Yes: URL provided| G[Fetch Job Advertisement]
+    F -->|No: pasted description| H[Prepare Job Input]
+    G --> H
+    H --> I{CV uploaded?}
+    I -->|Yes| J[Extract CV Text]
+    I -->|No| K{GitHub profile provided?}
     J --> K
-    K --> L[Company Research and News<br/>Tavily]
-    L --> M[Generate Report<br/>OpenAI gpt-4o-mini]
-    M --> N[Validate Report<br/>JSON, URLs, evidence, sections]
-    N --> O[Respond to Webhook<br/>Validated JSON report]
+    K -->|Yes| L[Fetch Public Repositories and READMEs]
+    K -->|No| M[Build Candidate Evidence]
+    L --> M
+    M --> N[Tavily Company Research]
+    N --> O[GNews Company News]
+    O --> P[Combine Research and News]
+    P --> Q[Generate Report with OpenAI]
+    Q --> R[Validate Report and Evidence]
+    R --> S[Format HTML Cards]
+    S --> T[Display Report in Form]
 ```
 
-The workflow is implemented in n8n. It validates the request, accepts either pasted job-description text or a public job-advertisement URL, collects candidate evidence from a PDF CV, candidate context, or GitHub, researches the company through Tavily, generates the report with OpenAI, validates the result, and returns JSON.
+`Input Valid?` sends invalid submissions to both `Show Validation Error` and `Create a page` in Notion; these are parallel branches. Missing a company name, job posting, or both candidate sources (PDF CV and GitHub profile) makes the submission invalid, so it does not reach `Needs Job Fetch?`. For a valid submission, `Needs Job Fetch?` is true only when a job URL is present and no pasted description is present; otherwise the workflow proceeds directly to `Prepare Job Input`.
 
-When a job URL is provided, `Prepare Job Input` first looks for structured `JobPosting` JSON-LD and then falls back to the page's `og:description` metadata. If neither contains enough text, the workflow asks the user to paste the job description instead.
+When a job URL is entered, `Prepare Job Input` first looks for structured `JobPosting` JSON-LD and then falls back to the page's `og:description` metadata. If neither provides enough text, the workflow reports an error and asks the user to paste the job description instead.
+
+GitHub evidence is retrieved without a GitHub credential from public repositories; forked repositories are excluded from the final candidate evidence. The workflow requests up to 30 repositories, sorted by recent push activity, and retrieves repository metadata and README content. Candidate CV text is capped at 30,000 characters and each README is capped at 12,000 characters. The report is generated as structured JSON internally, validated, then formatted as HTML for display; the form does not return a JSON API response.
+
+The workflow's validation code guarantees the required report sections, exactly five interview questions, and no more than three news items. It removes unverified source links and candidate claims, but it does not independently enforce every maximum requested by the generation prompt.
 
 ## Tech Stack and Why
 
 | Technology | Purpose |
 |---|---|
-| n8n | Orchestrates the workflow and exposes the webhook |
-| n8n Code nodes | Validate inputs, combine evidence, and validate the generated report |
+| n8n Form Trigger and Form nodes | Collect input and display validation errors or the completed report |
+| n8n Code nodes | Validate input, combine evidence, validate the generated report, and render HTML |
 | OpenAI `gpt-4o-mini` | Generates the structured interview preparation report |
-| Tavily Search API | Retrieves company information and recent relevant news |
-| GitHub REST API | Retrieves public repository information |
+| Tavily Search API | Retrieves company research |
+| GNews API | Retrieves company news |
+| GitHub REST API | Retrieves public repository metadata and README content |
 | n8n Extract From File | Extracts text from PDF CVs |
-| Webhook response | Returns the final report as JSON |
+| Notion node | Attempts to log invalid form submissions; it does not store generated reports |
+
+### External tools and APIs
+
+The MVP depends on four external services:
+
+- **OpenAI API** — generates the structured interview-preparation report.
+- **Tavily Search API** — provides company research.
+- **GNews API** — provides recent company news.
+- **GitHub REST API** — provides public repository metadata and README evidence.
+
+n8n, PDF extraction, and the optional Notion node support orchestration, candidate processing, and validation logging; they are not used as research or report-generation APIs.
 
 ## How to Run
 
-1. Start or open n8n.
-2. Import n8n-workflow json file (to be added).
-3. Assign the Tavily and OpenAI credentials to their respective nodes.
-4. Activate the workflow, or use the n8n test webhook while developing.
-5. Send a `POST` request to:
+1. Import the workflow and configure its credentials as described above.
+2. Activate the workflow and open the production form URL shown by n8n. During development, use the form's test URL.
+3. Enter the company name.
+4. Paste the job description into **Job post**, or enter a complete public `http(s)` job-posting URL in that field.
+5. Upload a PDF CV, enter a GitHub username/profile URL, or provide both.
+6. Submit the form and review the generated report on the completion screen.
 
-```text
-/webhook/generate-interview-report
-```
-
-The request must include `company_name` and either `job_description` or `job_url`. It must also include at least one candidate source: `candidate_context`, `github_profile`, or a PDF uploaded as the binary field `cv`.
-
-Example JSON request:
-
-```json
-{
-  "company_name": "Example Company",
-  "job_description": "We are looking for a backend developer with API and database experience.",
-  "candidate_context": "I have built REST APIs with Node.js and PostgreSQL.",
-  "github_profile": "your github profile name"
-}
-```
-
-The workflow returns the validated report as JSON. If both `job_description` and `job_url` are supplied, the pasted job description is used.
+The workflow validates that the company name and job posting are provided and that at least one candidate source (PDF CV or GitHub profile) is available. The GitHub field accepts a username or a GitHub profile URL.
 
 ## Testing Checklist
 
-- [ ] Import the workflow successfully.
-- [ ] Confirm the Tavily credential works.
-- [ ] Confirm the OpenAI credential works.
-- [ ] Test with pasted `job_description`.
-- [ ] Test with a publicly accessible `job_url`.
-- [ ] Test with a candidate context only.
-- [ ] Test with a public GitHub profile.
-- [ ] Test with a text-based PDF CV using the binary field `cv`.
-- [ ] Test a missing company name.
-- [ ] Test a request with neither `job_description` nor `job_url`.
-- [ ] Test an invalid GitHub URL.
-- [ ] Test a non-PDF CV.
+- [ ] Import the workflow and assign all required API credentials.
+- [ ] Confirm the Tavily, GNews, and OpenAI credentials work.
+- [ ] Submit a pasted job description.
+- [ ] Submit a publicly accessible job-posting URL.
+- [ ] Test with a PDF CV only.
+- [ ] Test with a public GitHub profile only.
+- [ ] Test with both a PDF CV and GitHub profile.
+- [ ] Test a missing company name or job posting.
+- [ ] Test a submission with neither a CV nor a GitHub profile.
+- [ ] Test an invalid GitHub username/profile URL.
+- [ ] Test a valid GitHub profile with no public non-fork repositories.
+- [ ] Test a non-PDF upload.
+- [ ] Test a PDF that uploads but contains no extractable text.
 - [ ] Test an inaccessible or JavaScript-only job page.
-- [ ] Confirm the response contains all required report sections.
+- [ ] Test a job page without usable `JobPosting` JSON-LD or `og:description` metadata.
+- [ ] Test failed or rate-limited Tavily, GNews, OpenAI, and GitHub requests.
+- [ ] Confirm the form displays all seven report sections and exactly five interview questions.
 - [ ] Confirm unsupported candidate claims are removed by `Validate Report`.
+- [ ] Confirm the invalid-input form message is shown and, if configured, logged to the intended Notion destination.
 
 ## Limitations and Error Handling
 
 - Job URLs must be publicly accessible and readable without an interactive login.
 - JavaScript-rendered, bot-protected, or blocked job pages may fail. Paste the job description when URL extraction fails.
-- URL extraction relies on structured `JobPosting` data or `og:description` metadata.
-- Scanned PDFs may produce little or no extractable text because OCR is not included.
-- GitHub evidence is limited to public repositories.
-- The workflow does not currently use Pinecone, RAG, LinkedIn, persistent storage, email delivery, or PDF report generation (to be explored in future versions).
-- Invalid input stops the workflow with a validation error.
-- Tavily or OpenAI credential and API errors must be reviewed in the n8n execution log.
-- Reports may contain zero to three news items when relevant news cannot be verified.
-- The final validation step removes claims whose URLs or candidate evidence cannot be traced to the supplied data.
+- URL extraction relies on structured `JobPosting` data or `og:description` metadata. The workflow processes at most 500,000 characters of fetched HTML and caps the extracted job description at 20,000 characters.
+- Scanned PDFs may produce little or no extractable text because OCR is not included. If the extracted CV text is shorter than 50 characters, the CV is ignored; the workflow fails later if no usable GitHub evidence remains.
+- GitHub evidence is limited to public, non-fork repositories retrieved through unauthenticated GitHub API requests. The request can return up to 30 repositories and may be affected by GitHub rate limits.
+- The report may contain zero to three news items when relevant news cannot be verified.
+- The report is displayed as HTML; PDF export and email delivery are not implemented.
+- The workflow does not currently use Pinecone, RAG, LinkedIn, or persistent storage for generated reports.
+- Invalid input is displayed in the form, and the connected Notion node attempts to create a validation-error page. Review its credential and destination; disable or reconfigure the node if this logging is not desired.
+- Later failures—such as an unreadable job page, no usable candidate evidence, or an API/credential error—may terminate the n8n execution instead of returning a friendly form message. Review the n8n execution log for these failures.
+- Candidate claims are checked against supplied CV text or GitHub repository evidence. The report currently does not display candidate evidence URLs or company background source URLs, although those sources are checked during validation. News URLs are displayed as links in the report.
+- The OpenAI and research requests do not have a general fallback report path; transient API failures may require a retry or rerun.
 
 ## Security and Privacy
 
-- Store Tavily and OpenAI keys in n8n credentials or environment variables.
+- Store Tavily, GNews, OpenAI, and (if used) Notion credentials in n8n credentials or environment variables.
 - Never place API keys in the workflow JSON, README, screenshots, or Git commits.
 - Keep `.env` excluded from version control.
 - Rotate any key that has been exposed.
 - Treat CVs, candidate context, and profile data as personal information.
 - Use synthetic test data before processing real candidate information.
 - Review n8n execution-history retention and delete sensitive executions when appropriate.
+- The invalid-input branch may retain validation messages in Notion; verify the destination and retention policy before using real submissions.
 - Define how submitted CVs and candidate data are retained and deleted before inviting real users.
-- Avoid enabling public access to the webhook without appropriate access controls and rate limits.
+- Avoid exposing the form publicly without appropriate access controls and rate limits.
 
-## Intended outcome
+## Intended Outcome
 
 Help job seekers focus their preparation on the company, the role, and the strongest relevant examples from their own experience.
 
@@ -174,9 +222,12 @@ Help job seekers focus their preparation on the company, the role, and the stron
 |---|---|---|
 | Required-section completeness | Percentage of reports containing every required section | 100% |
 | Question relevance | Check that each question relates to the role, company, or candidate | At least 4 of 5 questions |
-| Source support | Check that each company claim is supported by a cited source link | 100% of claims |
-| One-page fit | Render reports with a consistent template and count pages | 100% fit on one page |
-| News item formatting | When news is included, check that there are 2–3 items and each has a date and source link | 2–3 items, each with a date and link |
-| Source link validity | Automatically check whether cited links resolve | At least 95% resolve successfully |
-| Experience fit | Check candidate experience and project claims against the supplied profile or CV | 100% supported; no unsupported claims |
-| Autonomous completion | Count runs that finish without human input after a valid submission | 5 of 5 test runs |
+| Source validation | Check that company/news URLs in generated data match the research results; news links are visible in the report | 100% of returned URLs verified |
+| Report conciseness | Review rendered report length and readability; one-page fit is not guaranteed | About 500 words |
+| News item formatting | When news is included, check that each item has a date and source link | Every displayed item has a date and link |
+| Experience fit | Check candidate experience and project claims against the supplied CV or public repository evidence | 100% supported; no unsupported claims |
+| Autonomous completion | Count valid submissions that finish without human intervention after submission | 5 of 5 test runs |
+
+## Demo & Presentation
+
+Links to be added
