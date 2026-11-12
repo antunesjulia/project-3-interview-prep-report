@@ -11,7 +11,7 @@ Preparing for an interview means researching the company, understanding what the
 Submit the n8n form with:
 
 - The company name
-- The complete job description pasted into the **Job description** field; job-posting URLs are not accepted
+- The complete job description pasted into the **Job description** field; job-posting URLs are not accepted in this first version
 - At least one candidate source: a PDF CV or a GitHub username/profile URL
 
 The workflow uses these details to create a role-specific report.
