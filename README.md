@@ -89,7 +89,7 @@ The workflow does not currently use NewsAPI, Pinecone, or an authenticated GitHu
 | `report_template.md` | Reference for the intended interview-report structure and content. |
 | `stack_decision.md` | Records technology and architecture decisions. |
 | `gtm_future_sprints.md` | Future product, go-to-market, and development ideas. |
-| `visual_proof` | Folder containing Form-interface.png, Report-1.png, Report-2.png,final-n8n-workflow.png screenshots showing the form, generated reports, and workflow layout. |
+| `visual_proof` | Folder containing Form interface, n8n workflow screenshots showing the form, generated reports, and workflow layout. The demo recording and project presentation can also be found in this folder. |
 
 ## Architecture
 
